@@ -332,8 +332,10 @@ export const Canvas: React.FC = () => {
 
   const getBackgroundStyle = () => {
     const baseStyle: React.CSSProperties = {};
-    
-    if (backgroundType === 'pattern' && backgroundImage) {
+    // If 'No Background' is selected, make background fully transparent
+    if (backgroundType === 'pattern' && !backgroundImage) {
+      baseStyle.background = 'transparent';
+    } else if (backgroundType === 'pattern' && backgroundImage) {
       baseStyle.backgroundImage = `url(${backgroundImage})`;
       baseStyle.backgroundSize = 'cover';
       baseStyle.backgroundPosition = 'center';

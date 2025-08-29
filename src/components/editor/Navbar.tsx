@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMockupStore } from '@/contexts/MockupContext';
+import { getScreenshotFromUrl } from '@/lib/getScreenshotFromUrl';
 import html2canvas from 'html2canvas';
 
 export function Navbar() {
@@ -29,7 +30,31 @@ export function Navbar() {
   const [isExporting, setIsExporting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const { uploadedImage, imageBorder, fixedMargin, margin } = useMockupStore();
+  const { uploadedImage, imageBorder, fixedMargin, margin, setUploadedImage } = useMockupStore();
+
+  // Screenshot from URL dialog state
+  const [showScreenshotDialog, setShowScreenshotDialog] = useState(false);
+  const [screenshotUrl, setScreenshotUrl] = useState('');
+  const [isScreenshotLoading, setIsScreenshotLoading] = useState(false);
+
+  const handleScreenshotFromUrl = async () => {
+    if (!screenshotUrl) {
+      toast.error('Please enter a website URL.');
+      return;
+    }
+    setIsScreenshotLoading(true);
+    try {
+      const dataUrl = await getScreenshotFromUrl(screenshotUrl);
+      setUploadedImage(dataUrl);
+      toast('Screenshot loaded!');
+      setShowScreenshotDialog(false);
+      setScreenshotUrl('');
+    } catch (err) {
+      toast.error('Failed to get screenshot.');
+    } finally {
+      setIsScreenshotLoading(false);
+    }
+  };
 
   const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
 
@@ -143,6 +168,37 @@ export function Navbar() {
       }
       `}>
       <div className={`${!isMobile ? 'order-2' : 'order-1'}`}>
+        {/* Screenshot from URL Button */}
+        <Dialog open={showScreenshotDialog} onOpenChange={setShowScreenshotDialog}>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="mb-4 w-full" onClick={() => setShowScreenshotDialog(true)}>
+              Get Screenshot from URL
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-xs">
+            <DialogHeader>
+              <DialogTitle>Get Screenshot from URL</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col gap-2 py-2">
+              <input
+                type="text"
+                className="w-full rounded px-3 py-2 text-black text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Paste website URL (e.g. https://example.com)"
+                value={screenshotUrl}
+                onChange={e => setScreenshotUrl(e.target.value)}
+                disabled={isScreenshotLoading}
+              />
+              <Button
+                variant="default"
+                className="w-full"
+                onClick={handleScreenshotFromUrl}
+                disabled={isScreenshotLoading}
+              >
+                {isScreenshotLoading ? 'Fetching...' : 'Get Screenshot'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
         <div>
           <h3 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
             <Download className="w-5 h-5 text-primary" />

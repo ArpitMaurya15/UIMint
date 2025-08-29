@@ -32,6 +32,14 @@ export const Backgrounds: React.FC = () => {
 
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
+  // Option for no background (clear background)
+  const noBackgroundOption = {
+    name: 'No Background',
+    image: '', // No image, clear background
+    colors: [],
+    direction: '',
+  };
+
   const gradientPresets = [
     {
       name: 'Deep Horizon',
@@ -39,14 +47,13 @@ export const Backgrounds: React.FC = () => {
       direction: 'to-tl',
       image: '/assets/deep_horizon.webp'
     },
-    
     {
       name: 'Ocean Glow',
       colors: ['#56ccf2', '#2f80ed'],
       direction: 'to-r',
       image: '/assets/ocean_glow.webp'
     },
-     {
+    {
       name: 'Ocean Breeze',
       colors: ['#ff9a9e', '#fecfef'],
       direction: 'to-r',
@@ -138,16 +145,23 @@ export const Backgrounds: React.FC = () => {
     }
   ];
 
-  const handleGradientSelect = (gradient: typeof gradientPresets[0] | CustomBackground) => {
-    setBackgroundType('pattern');
-    if ('colors' in gradient && 'direction' in gradient) {
+  const handleGradientSelect = (gradient: typeof gradientPresets[0] | CustomBackground | typeof noBackgroundOption) => {
+    if (gradient.name === 'No Background') {
+      setBackgroundType('pattern');
+      setGradientColors([]);
+      setGradientDirection('');
+      setBackgroundImage(null);
+    } else if ('colors' in gradient && 'direction' in gradient) {
+      setBackgroundType('pattern');
       setGradientColors(gradient.colors);
       setGradientDirection(gradient.direction);
+      setBackgroundImage(gradient.image);
     } else {
+      setBackgroundType('pattern');
       setGradientColors(['#ffffff', '#ffffff']);
       setGradientDirection('to-r');
+      setBackgroundImage(gradient.image);
     }
-    setBackgroundImage(gradient.image);
     if (isMobile) setIsOpen(false);
   };
 
@@ -236,6 +250,8 @@ export const Backgrounds: React.FC = () => {
         </div>
         <div className="pt-0">
           <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
+            {/* No Background Option removed here to avoid duplicate */}
+            {/* Custom Background Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <button
@@ -299,7 +315,8 @@ export const Backgrounds: React.FC = () => {
                 />
               </DialogContent>
             </Dialog>
-            {[...customBackgrounds, ...gradientPresets].map((gradient, index) => (
+            {/* Custom Backgrounds first */}
+            {customBackgrounds.map((gradient, index) => (
               <button
                 key={gradient.name + index}
                 onClick={() => handleGradientSelect(gradient)}
@@ -309,7 +326,39 @@ export const Backgrounds: React.FC = () => {
                   : 'hover:scale-102'
                   }`}
                 style={{
-                  backgroundImage: `url(${gradient.image})`,
+                  backgroundImage: gradient.image ? `url(${gradient.image})` : undefined,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
+              >
+                <span className="text-sm text-white font-medium drop-shadow-lg relative z-10 bg-black/50 px-3 py-2 rounded">
+                  {gradient.name}
+                </span>
+              </button>
+            ))}
+            {/* No Background second */}
+            <button
+              key="no-background"
+              onClick={() => handleGradientSelect(noBackgroundOption)}
+              className={`h-16 rounded transition-all duration-200 relative overflow-hidden cursor-pointer border-2 border-dashed border-gray-400 bg-transparent flex items-center justify-center ${backgroundImage === null ? 'ring-2 ring-primary scale-105' : 'hover:scale-102'}`}
+              style={{}}
+            >
+              <span className="text-sm text-gray-700 font-medium drop-shadow-lg relative z-10 bg-white/70 px-3 py-2 rounded">
+                No Background
+              </span>
+            </button>
+            {/* Gradients after */}
+            {gradientPresets.map((gradient, index) => (
+              <button
+                key={gradient.name + index}
+                onClick={() => handleGradientSelect(gradient)}
+                className={`h-16 rounded transition-all duration-200 relative overflow-hidden cursor-pointer 
+                  ${backgroundImage === gradient.image
+                  ? 'ring-2 ring-primary scale-105'
+                  : 'hover:scale-102'
+                  }`}
+                style={{
+                  backgroundImage: gradient.image ? `url(${gradient.image})` : undefined,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center'
                 }}
